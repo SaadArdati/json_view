@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:json_view/json_view.dart';
 
-import '../models/json_color_scheme.dart';
-import '../models/json_style_scheme.dart';
 import '../painters/value_background_painter.dart';
 import 'arrow_widget.dart';
-import 'json_config.dart';
 
 typedef SpanBuilder = InlineSpan Function(BuildContext context, dynamic value);
 
 class ColonSpan extends TextSpan {
   const ColonSpan({
     TextStyle? style,
-  }) : super(text: ' : ', style: style);
+  }) : super(text: ': ', style: style);
 }
 
 class KeySpan extends TextSpan {
   final String keyValue;
+
   const KeySpan({
     required this.keyValue,
     TextStyle? style,
@@ -24,6 +23,7 @@ class KeySpan extends TextSpan {
 
 class ValueSpan extends TextSpan {
   final String value;
+
   const ValueSpan({
     required this.value,
     TextStyle? style,
@@ -36,20 +36,23 @@ class KeyValueTile extends StatelessWidget {
   final Widget? leading;
   final VoidCallback? onTap;
   final int? maxLines;
+  final JsonConfigData config;
+
   const KeyValueTile({
     Key? key,
     required this.keyName,
     required this.value,
+    required this.config,
     this.leading,
     this.onTap,
     this.maxLines,
   }) : super(key: key);
 
   JsonColorScheme colorScheme(BuildContext context) =>
-      JsonConfig.of(context).color ?? const JsonColorScheme();
+      config.color ?? const JsonColorScheme();
 
   JsonStyleScheme styleScheme(BuildContext context) =>
-      JsonConfig.of(context).style ?? const JsonStyleScheme();
+      config.style ?? const JsonStyleScheme();
 
   Color valueColor(BuildContext context) =>
       colorScheme(context).normalColor ?? Colors.black;
@@ -95,11 +98,19 @@ class KeyValueTile extends StatelessWidget {
       buildValue(context),
     ];
 
-    Widget result = SelectableText.rich(
+    Widget result = Text.rich(
       TextSpan(children: spans),
-      onTap: onTap,
       maxLines: maxLines,
     );
+    if (onTap != null) {
+      result = MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: result,
+        ),
+      );
+    }
     if (leading == null) {
       result = Padding(padding: const EdgeInsets.only(left: 16), child: result);
     } else {
@@ -120,10 +131,12 @@ class NullTile extends KeyValueTile {
   const NullTile({
     Key? key,
     required String keyName,
+    required JsonConfigData config,
   }) : super(
           key: key,
           keyName: keyName,
           value: 'null',
+          config: config,
         );
 
   @override
@@ -132,7 +145,6 @@ class NullTile extends KeyValueTile {
 
   @override
   InlineSpan buildValue(BuildContext context) {
-    final config = JsonConfig.of(context);
     final color = config.color?.nullBackground;
     TextStyle style = const TextStyle();
     if (config.style?.valuesStyle != null) {
@@ -163,10 +175,12 @@ class NumTile extends KeyValueTile {
     Key? key,
     required String keyName,
     required num value,
+    required JsonConfigData config,
   }) : super(
           key: key,
           keyName: keyName,
           value: '$value',
+          config: config,
         );
 
   @override
@@ -179,10 +193,12 @@ class BoolTile extends KeyValueTile {
     Key? key,
     required String keyName,
     required bool value,
+    required JsonConfigData config,
   }) : super(
           key: key,
           keyName: keyName,
           value: '$value',
+          config: config,
         );
 
   @override
@@ -198,14 +214,16 @@ class MapListTile extends KeyValueTile {
     required VoidCallback onTap,
     required bool showLeading,
     required bool expanded,
+    required JsonConfigData config,
   }) : super(
           key: key,
           keyName: keyName,
           value: value,
           onTap: onTap,
           leading: showLeading
-              ? ArrowWidget(expanded: expanded, onTap: onTap)
+              ? ArrowWidget(expanded: expanded, onTap: onTap, config: config)
               : null,
+          config: config,
         );
 
   @override

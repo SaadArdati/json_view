@@ -34,7 +34,7 @@ class JsonColorScheme {
   /// * normalColor
   /// * markColor
   /// * nullBackground
-  /// 
+  ///
   /// {@endtemplate}
   const JsonColorScheme({
     this.nullColor,

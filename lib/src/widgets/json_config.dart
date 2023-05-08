@@ -13,6 +13,7 @@ class JsonConfig extends InheritedWidget {
     Widget? child,
     this.data,
   }) : super(key: key, child: child ?? const SizedBox.shrink());
+
   @override
   bool updateShouldNotify(JsonConfig oldWidget) => data != oldWidget.data;
 

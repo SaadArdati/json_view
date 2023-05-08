@@ -6,117 +6,211 @@ import '../../json_view.dart';
 class StringTile extends StatefulWidget {
   final String keyName;
   final String value;
-  const StringTile({Key? key, required this.keyName, required this.value})
-      : super(key: key);
+  final JsonConfigData config;
+
+  const StringTile({
+    Key? key,
+    required this.keyName,
+    required this.value,
+    required this.config,
+  }) : super(key: key);
 
   @override
   State<StringTile> createState() => _StringTileState();
 }
 
 class _StringTileState extends State<StringTile> {
-  bool expanded = false;
+  final GlobalKey _key = GlobalKey();
 
-  String getParsedKeyName(BuildContext context) {
-    final quotation =
-        JsonConfig.of(context).style?.quotation ?? const JsonQuotation();
+  bool expanded = false;
+  bool doesFit = true;
+  late String parsedKey;
+
+  String getParsedKeyName(JsonConfigData config) {
+    final quotation = config.style?.quotation ?? const JsonQuotation();
     if (quotation.isEmpty) return widget.keyName;
     return '${quotation.leftQuote}${widget.keyName}${quotation.rightQuote}';
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    parsedKey = getParsedKeyName(widget.config);
+    checkIfCanFit();
+  }
+
+  @override
+  void didUpdateWidget(covariant StringTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    bool recalculateText = false;
+    if (oldWidget.keyName != widget.keyName) {
+      parsedKey = getParsedKeyName(widget.config);
+      recalculateText = true;
+    } else if (oldWidget.value != widget.value) {
+      recalculateText = true;
+    } else {
+      final newParsedKey = getParsedKeyName(widget.config);
+      if (parsedKey != newParsedKey) {
+        parsedKey = newParsedKey;
+        recalculateText = true;
+      }
+    }
+
+    if (recalculateText) {
+      checkIfCanFit();
+    }
+  }
+
+  void checkIfCanFit() {
+    if (widget.config.style?.charactersBeforeCutoff != null) {
+      final String fullText = '$parsedKey: "${widget.value}"';
+
+      if (fullText.length > widget.config.style!.charactersBeforeCutoff!) {
+        if (doesFit) {
+          setState(() {
+            doesFit = false;
+          });
+        }
+      } else {
+        if (!doesFit) {
+          setState(() {
+            doesFit = true;
+          });
+        }
+      }
+      return;
+    }
+    final double maxWidth = _key.currentContext?.size?.width ?? double.infinity;
+
+    final text = TextSpan(
+      children: [
+        KeySpan(
+          keyValue: parsedKey,
+          style: widget.config.style?.keysStyle,
+        ),
+        const ColonSpan(),
+        ValueSpan(
+          value: '"${widget.value}"',
+          style: widget.config.style?.valuesStyle,
+        ),
+      ],
+    );
+    final painter = TextPainter(
+      text: text,
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout(minWidth: 0, maxWidth: double.infinity);
+    final realRenderWidth = painter.width;
+
+    if (realRenderWidth > maxWidth) {
+      if (!doesFit) {
+        setState(() {
+          doesFit = true;
+        });
+      }
+    } else {
+      if (doesFit) {
+        setState(() {
+          doesFit = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final config = JsonConfig.of(context);
-    return LayoutBuilder(
-      builder: (context, box) {
-        /**
-         *  [KEY_PREFIX]  [COLON]     [VALUE]
-         *  [computed]    [computed]  [computed] 
-         */
-        double boxWidth = box.maxWidth;
-
-        final text = TextSpan(
-          children: [
-            KeySpan(
-              keyValue: getParsedKeyName(context),
-              style: config.style?.keysStyle,
-            ),
-            const ColonSpan(),
-            ValueSpan(
-              value: '"${widget.value}"',
-              style: config.style?.valuesStyle,
-            ),
-          ],
-        );
-        final painter = TextPainter(
-          text: text,
-          maxLines: 1,
-          textDirection: TextDirection.ltr,
-        )..layout(minWidth: 0, maxWidth: double.infinity);
-        final realRenderWidth = painter.width;
-
-        Widget selectedResult = _StringInnterTile(
-          keyName: widget.keyName,
-          value: widget.value,
-          onTap: () {
-            setState(() {
-              expanded = !expanded;
-            });
-          },
-        );
-
-        if (realRenderWidth > boxWidth) {
-          Widget result = _StringOnlyDisplayTile(
-            keyName: widget.keyName,
-            value: widget.value,
-            onTap: () {
-              setState(() {
-                expanded = !expanded;
-              });
-            },
-          );
+    return Builder(
+      key: _key,
+      builder: (context) {
+        if (!doesFit) {
+          Widget result;
           if (expanded) {
-            result = selectedResult;
+            result = _StringInnerTile(
+              keyName: widget.keyName,
+              value: widget.value,
+              config: widget.config,
+              onTap: () {
+                setState(() {
+                  expanded = !expanded;
+                });
+              },
+            );
+          } else {
+            result = _StringOnlyDisplayTile(
+              keyName: widget.keyName,
+              value: widget.value,
+              config: widget.config,
+              onTap: () {
+                setState(() {
+                  expanded = !expanded;
+                });
+              },
+            );
           }
-          if (config.animation ?? JsonConfigData.kUseAnimation) {
+
+          if (widget.config.animation ?? JsonConfigData.kUseAnimation) {
             result = AnimatedSize(
               alignment: Alignment.topCenter,
-              duration: JsonConfig.of(context).animationDuration ??
+              duration: widget.config.animationDuration ??
                   const Duration(milliseconds: 300),
-              curve: JsonConfig.of(context).animationCurve ?? Curves.ease,
+              curve: widget.config.animationCurve ?? Curves.ease,
               child: result,
             );
           }
 
           return result;
         } else {
-          return selectedResult;
+          return _StringInnerTile(
+            keyName: widget.keyName,
+            value: widget.value,
+            config: widget.config,
+            onTap: () {
+              setState(() {
+                expanded = !expanded;
+              });
+            },
+          );
         }
       },
     );
   }
 }
 
-class _StringInnterTile extends KeyValueTile {
-  const _StringInnterTile(
-      {required String keyName,
-      required String value,
-      int? maxLines,
-      VoidCallback? onTap})
-      : super(
-            keyName: keyName,
-            value: '"$value"',
-            maxLines: maxLines,
-            onTap: onTap);
+class _StringInnerTile extends KeyValueTile {
+  const _StringInnerTile({
+    required String keyName,
+    required String value,
+    int? maxLines,
+    VoidCallback? onTap,
+    required JsonConfigData config,
+  }) : super(
+          keyName: keyName,
+          value: '"$value"',
+          maxLines: maxLines,
+          onTap: onTap,
+          config: config,
+        );
 
   @override
   Color valueColor(BuildContext context) =>
       colorScheme(context).stringColor ?? Colors.orange;
 }
 
-class _StringOnlyDisplayTile extends _StringInnterTile {
-  const _StringOnlyDisplayTile(
-      {required String keyName, required String value, VoidCallback? onTap})
-      : super(keyName: keyName, value: value, maxLines: 1, onTap: onTap);
+class _StringOnlyDisplayTile extends _StringInnerTile {
+  const _StringOnlyDisplayTile({
+    required String keyName,
+    required String value,
+    VoidCallback? onTap,
+    required JsonConfigData config,
+  }) : super(
+          keyName: keyName,
+          value: value,
+          maxLines: 1,
+          onTap: onTap,
+          config: config,
+        );
+
   @override
   Widget build(BuildContext context) {
     final cs = colorScheme(context);
@@ -132,16 +226,16 @@ class _StringOnlyDisplayTile extends _StringInnterTile {
       buildValue(context),
     ];
 
-    Widget result = Text.rich(
-      TextSpan(children: spans),
-      maxLines: maxLines,
-      overflow: TextOverflow.ellipsis,
-    );
-
-    result = GestureDetector(onTap: onTap, child: result);
-    result = MouseRegion(
+    Widget result = MouseRegion(
       cursor: SystemMouseCursors.click,
-      child: result,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Text.rich(
+          TextSpan(children: spans),
+          maxLines: maxLines,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     );
 
     if (leading == null) {

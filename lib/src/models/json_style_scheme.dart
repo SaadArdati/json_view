@@ -42,6 +42,7 @@ class JsonQuotation {
       rightQuote == null ||
       leftQuote!.isEmpty ||
       rightQuote!.isEmpty;
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -52,7 +53,7 @@ class JsonQuotation {
   }
 
   @override
-  int get hashCode => hashValues(leftQuote, rightQuote);
+  int get hashCode => Object.hash(leftQuote, rightQuote);
 }
 
 /// json style scheem
@@ -75,6 +76,7 @@ class JsonStyleScheme {
     this.arrow,
     this.openAtStart = false,
     this.depth = 0,
+    this.charactersBeforeCutoff,
   }) : assert(depth >= 0);
 
   /// text style for keys
@@ -106,6 +108,8 @@ class JsonStyleScheme {
   /// too large depth will cause performance issue, use with `caution`
   final int depth;
 
+  final int? charactersBeforeCutoff;
+
   /// copy another JsonStyleScheme
   JsonStyleScheme copyWith({
     TextStyle? keysStyle,
@@ -114,6 +118,7 @@ class JsonStyleScheme {
     Widget? arrow,
     bool? openAtStart,
     int? depth,
+    int? charactersBeforeCutoff,
   }) {
     return JsonStyleScheme(
       keysStyle: keysStyle ?? this.keysStyle,
@@ -122,6 +127,8 @@ class JsonStyleScheme {
       arrow: arrow ?? this.arrow,
       openAtStart: openAtStart ?? this.openAtStart,
       depth: depth ?? this.depth,
+      charactersBeforeCutoff:
+          charactersBeforeCutoff ?? this.charactersBeforeCutoff,
     );
   }
 
@@ -135,6 +142,7 @@ class JsonStyleScheme {
       arrow: scheme.arrow,
       openAtStart: scheme.openAtStart,
       depth: scheme.depth,
+      charactersBeforeCutoff: scheme.charactersBeforeCutoff,
     );
   }
 
@@ -148,7 +156,8 @@ class JsonStyleScheme {
         other.quotation == quotation &&
         other.arrow == arrow &&
         other.openAtStart == openAtStart &&
-        other.depth == depth;
+        other.depth == depth &&
+        other.charactersBeforeCutoff == charactersBeforeCutoff;
   }
 
   @override
@@ -158,6 +167,7 @@ class JsonStyleScheme {
         quotation.hashCode ^
         arrow.hashCode ^
         openAtStart.hashCode ^
-        depth.hashCode;
+        depth.hashCode ^
+        charactersBeforeCutoff.hashCode;
   }
 }

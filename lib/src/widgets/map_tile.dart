@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../models/json_config_data.dart';
-import 'json_config.dart';
 import 'json_view.dart';
 import 'simple_tiles.dart';
 
@@ -10,12 +9,15 @@ class MapTile extends StatefulWidget {
   final List<MapEntry> items;
   final bool expanded;
   final int depth;
+  final JsonConfigData config;
+
   const MapTile({
     Key? key,
     required this.keyName,
     required this.items,
     this.expanded = false,
     required this.depth,
+    required this.config,
   }) : super(key: key);
 
   @override
@@ -23,40 +25,61 @@ class MapTile extends StatefulWidget {
 }
 
 class _MapTileState extends State<MapTile> {
-  bool _init = false;
-  bool _expanded = false;
+  late bool _isExpanded = widget.expanded;
 
-  _changeState() {
+  void _changeState() {
     if (mounted && widget.items.isNotEmpty) {
       setState(() {
-        _expanded = !_expanded;
+        _isExpanded = !_isExpanded;
       });
     }
   }
 
   String get _value {
     if (widget.items.isEmpty) return '{}';
-    if (_expanded) return '';
+    if (_isExpanded) return '';
     return '{ ... }';
   }
 
-  // safe call context in build
-  _initExpanded(BuildContext context) {
-    if (!_init) {
-      _init = true;
-      final jsonConfig = JsonConfig.of(context);
-      _expanded = jsonConfig.style?.openAtStart ?? false;
-      int depth = jsonConfig.style?.depth ?? 0;
-      if (depth > 0) {
-        _expanded = depth > widget.depth;
-      }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    checkExpansion();
+  }
+
+  @override
+  void didUpdateWidget(covariant MapTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    checkExpansion();
+  }
+
+  void checkExpansion() {
+    bool isExpanded = widget.config.style?.openAtStart ?? false;
+    // int depth = widget.config.style?.depth ?? 0;
+    if (widget.items.length > 20) {
+      isExpanded = true;
     }
+
+    if (isExpanded != _isExpanded) {
+      setState(() {
+        _isExpanded = isExpanded;
+      });
+    }
+  }
+
+  List<Widget> _buildChildren() {
+    return widget.items.map((item) {
+      return getParsedItem(
+        key: item.key,
+        value: item.value,
+        depth: widget.depth + 1,
+        config: widget.config,
+      );
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final jsonConfig = JsonConfig.of(context);
-    _initExpanded(context);
     Widget result = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -64,31 +87,27 @@ class _MapTileState extends State<MapTile> {
           keyName: widget.keyName,
           value: _value,
           onTap: _changeState,
-          expanded: _expanded,
+          expanded: _isExpanded,
           showLeading: widget.items.isNotEmpty,
+          config: widget.config,
         ),
-        if (_expanded)
+        if (_isExpanded)
           Padding(
-            padding: jsonConfig.itemPadding ?? const EdgeInsets.only(left: 8),
+            padding:
+                widget.config.itemPadding ?? const EdgeInsets.only(left: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: widget.items.map((item) {
-                return getParsedItem(
-                  key: item.key,
-                  value: item.value,
-                  depth: widget.depth + 1,
-                );
-              }).toList(),
+              children: _buildChildren(),
             ),
           ),
       ],
     );
-    if (jsonConfig.animation ?? JsonConfigData.kUseAnimation) {
+    if (widget.config.animation ?? JsonConfigData.kUseAnimation) {
       result = AnimatedSize(
         alignment: Alignment.topCenter,
-        duration: JsonConfig.of(context).animationDuration ??
+        duration: widget.config.animationDuration ??
             const Duration(milliseconds: 300),
-        curve: JsonConfig.of(context).animationCurve ?? Curves.ease,
+        curve: widget.config.animationCurve ?? Curves.ease,
         child: result,
       );
     }

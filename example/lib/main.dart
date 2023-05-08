@@ -72,9 +72,21 @@ class _HomePageState extends State<HomePage>
           children: [
             JsonView(
               json: getJsonData(),
+              styleScheme: const JsonStyleScheme(
+                openAtStart: true,
+                arrow: Icon(Icons.arrow_right, size: 16),
+                keysStyle: TextStyle(height: 1.3),
+                valuesStyle: TextStyle(height: 1.3),
+              ),
             ),
             JsonView(
               json: largeJsonData(),
+              styleScheme: const JsonStyleScheme(
+                openAtStart: true,
+                arrow: Icon(Icons.arrow_right, size: 16),
+                keysStyle: TextStyle(height: 1.3),
+                valuesStyle: TextStyle(height: 1.3),
+              ),
             ),
             JsonView(
               json: listJsonData(),

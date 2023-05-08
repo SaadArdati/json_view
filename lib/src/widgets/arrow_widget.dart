@@ -8,16 +8,17 @@ import '../painters/arrow_painter.dart';
 class ArrowWidget extends StatelessWidget {
   final VoidCallback? onTap;
   final bool expanded;
+  final JsonConfigData config;
 
   const ArrowWidget({
     Key? key,
     this.onTap,
     this.expanded = false,
+    required this.config,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final JsonConfigData config = JsonConfig.of(context);
     final cs = config.color ?? JsonConfigData.defaultColor(context);
     Widget? arrow = config.style?.arrow;
     if (arrow != null) {
