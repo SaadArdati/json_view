@@ -99,6 +99,9 @@ class JsonStyleScheme {
   /// use with `caution`
   final bool? openAtStart;
 
+  /// Opens the first layer by default only, even if [openAtStart] is false.
+  final bool openFirstLayer = true;
+
   /// the default open depth of json.
   ///
   /// default set to 0, means no open depth
@@ -108,6 +111,15 @@ class JsonStyleScheme {
   /// too large depth will cause performance issue, use with `caution`
   final int depth;
 
+  /// Optimizes string tile rendering by not requiring a paint-phase to
+  /// calculate if the width of the rendered json string fits within the
+  /// available space. If the string is longer than the available space,
+  /// the string will be truncated and an ellipsis will be added.
+  ///
+  /// By setting a concrete value for this property, the string will be
+  /// truncated if it is longer than the value. If the value is null, the
+  /// a paint-phase will be required to calculate if the string fits within
+  /// the available space, which may cause performance issues.
   final int? charactersBeforeCutoff;
 
   /// copy another JsonStyleScheme

@@ -20,7 +20,7 @@ class ListTile extends StatefulWidget {
   final String keyName;
   final List items;
   final IndexRange range;
-  final bool expanded;
+  final bool? isExpanded;
   final int depth;
   final JsonConfigData config;
 
@@ -29,7 +29,7 @@ class ListTile extends StatefulWidget {
     required this.keyName,
     required this.items,
     required this.range,
-    this.expanded = false,
+    this.isExpanded,
     required this.depth,
     required this.config,
   }) : super(key: key);
@@ -39,7 +39,8 @@ class ListTile extends StatefulWidget {
 }
 
 class _ListTileState extends State<ListTile> {
-  late bool _isExpanded = widget.expanded;
+  late bool _isExpanded = widget.isExpanded ?? false;
+
   int _gap = 2;
   List<Widget> _children = [];
 
@@ -67,9 +68,10 @@ class _ListTileState extends State<ListTile> {
   }
 
   void checkExpansion() {
-    bool isExpanded = widget.config.style?.openAtStart ?? false;
+    bool isExpanded =
+        widget.isExpanded ?? widget.config.style?.openAtStart ?? false;
     int depth = widget.config.style?.depth ?? 0;
-    if (widget.items.length > 20) {
+    if (widget.isExpanded == null && widget.items.length > 20) {
       isExpanded = true;
     }
 
@@ -130,7 +132,7 @@ class _ListTileState extends State<ListTile> {
           range: i != gapSize - 1
               ? IndexRange(start: startIndex, end: startIndex + currentGap - 1)
               : IndexRange(start: startIndex, end: endIndex),
-          expanded: widget.expanded,
+          isExpanded: widget.isExpanded,
           depth: widget.depth + 1,
           config: widget.config,
         ),

@@ -7,7 +7,7 @@ import 'simple_tiles.dart';
 class MapTile extends StatefulWidget {
   final String keyName;
   final List<MapEntry> items;
-  final bool expanded;
+  final bool? isExpanded;
   final int depth;
   final JsonConfigData config;
 
@@ -15,7 +15,7 @@ class MapTile extends StatefulWidget {
     Key? key,
     required this.keyName,
     required this.items,
-    this.expanded = false,
+    this.isExpanded,
     required this.depth,
     required this.config,
   }) : super(key: key);
@@ -25,7 +25,7 @@ class MapTile extends StatefulWidget {
 }
 
 class _MapTileState extends State<MapTile> {
-  late bool _isExpanded = widget.expanded;
+  late bool _isExpanded = widget.isExpanded ?? false;
 
   void _changeState() {
     if (mounted && widget.items.isNotEmpty) {
@@ -54,9 +54,10 @@ class _MapTileState extends State<MapTile> {
   }
 
   void checkExpansion() {
-    bool isExpanded = widget.config.style?.openAtStart ?? false;
+    bool isExpanded =
+        widget.isExpanded ?? widget.config.style?.openAtStart ?? false;
     // int depth = widget.config.style?.depth ?? 0;
-    if (widget.items.length > 20) {
+    if (widget.isExpanded == null && widget.items.length > 20) {
       isExpanded = true;
     }
 

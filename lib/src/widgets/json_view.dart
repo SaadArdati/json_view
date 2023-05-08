@@ -239,14 +239,18 @@ Widget getParsedItem({
       range: IndexRange(start: 0, end: value.length - 1),
       depth: depth,
       config: config,
+      isExpanded:
+          config.style?.openFirstLayer == true && depth == 0 ? true : null,
     );
   }
   if (value is Map) {
     return MapTile(
       keyName: key,
-      items: value.entries.toList(),
+      items: [...value.entries],
       depth: depth,
       config: config,
+      isExpanded:
+          config.style?.openFirstLayer == true && depth == 0 ? true : null,
     );
   }
   return const Text('unsupport type');
