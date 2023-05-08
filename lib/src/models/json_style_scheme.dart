@@ -67,7 +67,9 @@ class JsonStyleScheme {
   /// * quotation
   /// * arrow
   /// * openAtStart
+  /// * openFirstLayer
   /// * depth
+  /// * charactersBeforeCutoff
   /// {@endtemplate}
   const JsonStyleScheme({
     this.keysStyle = const TextStyle(),
