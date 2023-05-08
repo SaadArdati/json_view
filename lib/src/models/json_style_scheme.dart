@@ -75,6 +75,7 @@ class JsonStyleScheme {
     this.quotation = const JsonQuotation(),
     this.arrow,
     this.openAtStart = false,
+    this.openFirstLayer = true,
     this.depth = 0,
     this.charactersBeforeCutoff,
   }) : assert(depth >= 0);
@@ -100,7 +101,7 @@ class JsonStyleScheme {
   final bool? openAtStart;
 
   /// Opens the first layer by default only, even if [openAtStart] is false.
-  final bool openFirstLayer = true;
+  final bool openFirstLayer;
 
   /// the default open depth of json.
   ///
@@ -129,6 +130,7 @@ class JsonStyleScheme {
     JsonQuotation? quotation,
     Widget? arrow,
     bool? openAtStart,
+    bool? openFirstLayer,
     int? depth,
     int? charactersBeforeCutoff,
   }) {
@@ -138,6 +140,7 @@ class JsonStyleScheme {
       quotation: quotation ?? this.quotation,
       arrow: arrow ?? this.arrow,
       openAtStart: openAtStart ?? this.openAtStart,
+      openFirstLayer: openFirstLayer ?? this.openFirstLayer,
       depth: depth ?? this.depth,
       charactersBeforeCutoff:
           charactersBeforeCutoff ?? this.charactersBeforeCutoff,
@@ -153,6 +156,7 @@ class JsonStyleScheme {
       quotation: scheme.quotation,
       arrow: scheme.arrow,
       openAtStart: scheme.openAtStart,
+      openFirstLayer: scheme.openFirstLayer,
       depth: scheme.depth,
       charactersBeforeCutoff: scheme.charactersBeforeCutoff,
     );
@@ -168,6 +172,7 @@ class JsonStyleScheme {
         other.quotation == quotation &&
         other.arrow == arrow &&
         other.openAtStart == openAtStart &&
+        other.openFirstLayer == openFirstLayer &&
         other.depth == depth &&
         other.charactersBeforeCutoff == charactersBeforeCutoff;
   }
@@ -179,6 +184,7 @@ class JsonStyleScheme {
         quotation.hashCode ^
         arrow.hashCode ^
         openAtStart.hashCode ^
+        openFirstLayer.hashCode ^
         depth.hashCode ^
         charactersBeforeCutoff.hashCode;
   }
