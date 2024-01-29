@@ -4,6 +4,14 @@ import 'package:json_view/src/widgets/json_view.dart';
 import 'json_color_scheme.dart';
 import 'json_style_scheme.dart';
 
+/// Converts a [DateTime] to a serializable [String].
+typedef DateTimeSerializer = String? Function(DateTime? value);
+
+/// A default [DateTimeSerializer] that converts a [DateTime] to a
+/// serializable [String].
+DateTimeSerializer defaultDateTimeSerializer =
+    (value) => value?.toIso8601String();
+
 /// Json View Configuration Data
 class JsonConfigData {
   /// color scheme of json view
@@ -45,6 +53,8 @@ class JsonConfigData {
   /// {@endtemplate}
   final int? gap;
 
+  final Map<Object, JsonTileBuilder> customTiles;
+
   /// Json View Configuration Data
   JsonConfigData({
     this.color,
@@ -54,6 +64,7 @@ class JsonConfigData {
     this.animationDuration,
     this.animationCurve,
     this.gap,
+    this.customTiles = const {},
   });
 
   JsonConfigData.fromJsonView(JsonView view)
@@ -63,7 +74,8 @@ class JsonConfigData {
         itemPadding = view.itemPadding,
         animationDuration = view.animationDuration,
         animationCurve = view.animationCurve,
-        gap = null;
+        gap = view.gap,
+        customTiles = view.customTiles;
 
   JsonConfigData.fromJsonViewBody(JsonViewBody body)
       : color = body.colorScheme,
@@ -72,7 +84,8 @@ class JsonConfigData {
         itemPadding = body.itemPadding,
         animationDuration = body.animationDuration,
         animationCurve = body.animationCurve,
-        gap = body.gap;
+        gap = body.gap,
+        customTiles = body.customTiles;
 
   /// default use animation
   static const kUseAnimation = true;
@@ -173,12 +186,12 @@ class JsonConfigData {
   }
 
   @override
-  int get hashCode => hashValues(
+  int get hashCode => Object.hashAll([
         color,
         style,
         itemPadding,
         animationDuration,
         animationCurve,
         gap,
-      );
+      ]);
 }

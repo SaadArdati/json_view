@@ -8,8 +8,8 @@ typedef SpanBuilder = InlineSpan Function(BuildContext context, dynamic value);
 
 class ColonSpan extends TextSpan {
   const ColonSpan({
-    TextStyle? style,
-  }) : super(text: ': ', style: style);
+    super.style,
+  }) : super(text: ': ');
 }
 
 class KeySpan extends TextSpan {
@@ -17,8 +17,8 @@ class KeySpan extends TextSpan {
 
   const KeySpan({
     required this.keyValue,
-    TextStyle? style,
-  }) : super(text: keyValue, style: style);
+    super.style,
+  }) : super(text: keyValue);
 }
 
 class ValueSpan extends TextSpan {
@@ -26,9 +26,14 @@ class ValueSpan extends TextSpan {
 
   const ValueSpan({
     required this.value,
-    TextStyle? style,
-  }) : super(text: value, style: style);
+    super.style,
+  }) : super(text: value);
 }
+
+typedef ValueBuilder = InlineSpan Function(
+  BuildContext context,
+  TextStyle? style,
+);
 
 class KeyValueTile extends StatelessWidget {
   final String keyName;
@@ -37,16 +42,18 @@ class KeyValueTile extends StatelessWidget {
   final VoidCallback? onTap;
   final int? maxLines;
   final JsonConfigData config;
+  final ValueBuilder? valueBuilder;
 
   const KeyValueTile({
-    Key? key,
+    super.key,
     required this.keyName,
     required this.value,
     required this.config,
     this.leading,
     this.onTap,
     this.maxLines,
-  }) : super(key: key);
+    this.valueBuilder,
+  });
 
   JsonColorScheme colorScheme(BuildContext context) =>
       config.color ?? const JsonColorScheme();
@@ -76,10 +83,12 @@ class KeyValueTile extends StatelessWidget {
   }
 
   InlineSpan buildValue(BuildContext context) {
-    return ValueSpan(
-      value: value,
-      style: valueStyle(context).copyWith(color: valueColor(context)),
-    );
+    final style = valueStyle(context).copyWith(color: valueColor(context));
+    return valueBuilder?.call(context, style) ??
+        ValueSpan(
+          value: value,
+          style: style,
+        );
   }
 
   @override
@@ -129,14 +138,11 @@ class KeyValueTile extends StatelessWidget {
 
 class NullTile extends KeyValueTile {
   const NullTile({
-    Key? key,
-    required String keyName,
-    required JsonConfigData config,
+    super.key,
+    required super.keyName,
+    required super.config,
   }) : super(
-          key: key,
-          keyName: keyName,
           value: 'null',
-          config: config,
         );
 
   @override
@@ -172,15 +178,12 @@ class NullTile extends KeyValueTile {
 
 class NumTile extends KeyValueTile {
   const NumTile({
-    Key? key,
-    required String keyName,
+    super.key,
+    required super.keyName,
     required num value,
-    required JsonConfigData config,
+    required super.config,
   }) : super(
-          key: key,
-          keyName: keyName,
           value: '$value',
-          config: config,
         );
 
   @override
@@ -190,15 +193,12 @@ class NumTile extends KeyValueTile {
 
 class BoolTile extends KeyValueTile {
   const BoolTile({
-    Key? key,
-    required String keyName,
+    super.key,
+    required super.keyName,
     required bool value,
-    required JsonConfigData config,
+    required super.config,
   }) : super(
-          key: key,
-          keyName: keyName,
           value: '$value',
-          config: config,
         );
 
   @override
@@ -208,22 +208,17 @@ class BoolTile extends KeyValueTile {
 
 class MapListTile extends KeyValueTile {
   MapListTile({
-    Key? key,
-    required String keyName,
-    required String value,
-    required VoidCallback onTap,
+    super.key,
+    required super.keyName,
+    required super.value,
+    required VoidCallback super.onTap,
     required bool showLeading,
     required bool expanded,
-    required JsonConfigData config,
+    required super.config,
   }) : super(
-          key: key,
-          keyName: keyName,
-          value: value,
-          onTap: onTap,
           leading: showLeading
               ? ArrowWidget(expanded: expanded, onTap: onTap, config: config)
               : null,
-          config: config,
         );
 
   @override
@@ -232,3 +227,4 @@ class MapListTile extends KeyValueTile {
     return cs.normalColor ?? Colors.black;
   }
 }
+

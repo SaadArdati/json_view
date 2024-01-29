@@ -9,11 +9,11 @@ class StringTile extends StatefulWidget {
   final JsonConfigData config;
 
   const StringTile({
-    Key? key,
+    super.key,
     required this.keyName,
     required this.value,
     required this.config,
-  }) : super(key: key);
+  });
 
   @override
   State<StringTile> createState() => _StringTileState();
@@ -179,17 +179,13 @@ class _StringTileState extends State<StringTile> {
 
 class _StringInnerTile extends KeyValueTile {
   const _StringInnerTile({
-    required String keyName,
+    required super.keyName,
     required String value,
-    int? maxLines,
-    VoidCallback? onTap,
-    required JsonConfigData config,
+    super.maxLines,
+    super.onTap,
+    required super.config,
   }) : super(
-          keyName: keyName,
           value: '"$value"',
-          maxLines: maxLines,
-          onTap: onTap,
-          config: config,
         );
 
   @override
@@ -199,16 +195,12 @@ class _StringInnerTile extends KeyValueTile {
 
 class _StringOnlyDisplayTile extends _StringInnerTile {
   const _StringOnlyDisplayTile({
-    required String keyName,
-    required String value,
-    VoidCallback? onTap,
-    required JsonConfigData config,
+    required super.keyName,
+    required super.value,
+    super.onTap,
+    required super.config,
   }) : super(
-          keyName: keyName,
-          value: value,
           maxLines: 1,
-          onTap: onTap,
-          config: config,
         );
 
   @override

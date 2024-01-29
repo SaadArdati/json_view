@@ -96,7 +96,7 @@ class JsonColorScheme {
   }
 
   @override
-  int get hashCode => hashValues(
+  int get hashCode => Object.hashAll([
         nullColor,
         boolColor,
         numColor,
@@ -104,7 +104,7 @@ class JsonColorScheme {
         normalColor,
         markColor,
         nullBackground,
-      );
+      ]);
 }
 
 /// default light color scheme

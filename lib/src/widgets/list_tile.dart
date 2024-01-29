@@ -16,29 +16,31 @@ class IndexRange {
   int get length => end - start;
 }
 
-class ListTile extends StatefulWidget {
+class ListJsonTile extends StatefulWidget {
   final String keyName;
   final List items;
   final IndexRange range;
   final bool? isExpanded;
   final int depth;
   final JsonConfigData config;
+  final Map<Object, JsonTileBuilder>? customTiles;
 
-  const ListTile({
-    Key? key,
+  const ListJsonTile({
+    super.key,
     required this.keyName,
     required this.items,
     required this.range,
     this.isExpanded,
     required this.depth,
     required this.config,
-  }) : super(key: key);
+    this.customTiles,
+  });
 
   @override
-  State<ListTile> createState() => _ListTileState();
+  State<ListJsonTile> createState() => _ListJsonTileState();
 }
 
-class _ListTileState extends State<ListTile> {
+class _ListJsonTileState extends State<ListJsonTile> {
   late bool _isExpanded = widget.isExpanded ?? false;
 
   int _gap = 2;
@@ -70,7 +72,6 @@ class _ListTileState extends State<ListTile> {
   void checkExpansion() {
     bool isExpanded =
         widget.isExpanded ?? widget.config.style?.openAtStart ?? false;
-    int depth = widget.config.style?.depth ?? 0;
     if (widget.isExpanded == null && widget.items.length > 20) {
       isExpanded = true;
     }
@@ -94,10 +95,12 @@ class _ListTileState extends State<ListTile> {
         for (var i = 0; i <= widget.range.length; i++) {
           _children.add(
             getIndexedItem(
+              context,
               index: i,
               value: widget.items[i],
               depth: widget.depth + 1,
               config: widget.config,
+              customTiles: widget.customTiles,
             ),
           );
         }
@@ -126,7 +129,7 @@ class _ListTileState extends State<ListTile> {
       int startIndex = widget.range.start + i * currentGap;
       int endIndex = widget.range.end;
       gapChildren.add(
-        ListTile(
+        ListJsonTile(
           keyName: '[$i]',
           items: widget.items,
           range: i != gapSize - 1

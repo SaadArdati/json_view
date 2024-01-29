@@ -11,11 +11,11 @@ class ArrowWidget extends StatelessWidget {
   final JsonConfigData config;
 
   const ArrowWidget({
-    Key? key,
+    super.key,
     this.onTap,
     this.expanded = false,
     required this.config,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

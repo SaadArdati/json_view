@@ -10,15 +10,17 @@ class MapTile extends StatefulWidget {
   final bool? isExpanded;
   final int depth;
   final JsonConfigData config;
+  final Map<Object, JsonTileBuilder>? customTiles;
 
   const MapTile({
-    Key? key,
+    super.key,
     required this.keyName,
     required this.items,
     this.isExpanded,
     required this.depth,
     required this.config,
-  }) : super(key: key);
+    this.customTiles,
+  });
 
   @override
   State<MapTile> createState() => _MapTileState();
@@ -71,10 +73,12 @@ class _MapTileState extends State<MapTile> {
   List<Widget> _buildChildren() {
     return widget.items.map((item) {
       return getParsedItem(
+        context,
         key: item.key,
         value: item.value,
         depth: widget.depth + 1,
         config: widget.config,
+        customTiles: widget.customTiles,
       );
     }).toList();
   }

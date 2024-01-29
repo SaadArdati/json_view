@@ -4,7 +4,14 @@ import 'package:json_view/src/widgets/string_tile.dart';
 import '../../json_view.dart';
 import 'list_tile.dart';
 import 'map_tile.dart';
-import 'simple_tiles.dart';
+
+typedef JsonTileBuilder = Widget Function(
+  BuildContext context,
+  String key,
+  dynamic value,
+  JsonConfigData config,
+  int depth,
+);
 
 class JsonView extends StatefulWidget {
   /// {@template json_view.json_view.json}
@@ -51,11 +58,13 @@ class JsonView extends StatefulWidget {
   /// {@macro json_view.json_config_data.JsonConfigData.gap}
   final int? gap;
 
+  final Map<Object, JsonTileBuilder> customTiles;
+
   /// provider a json view, build with listview
   ///
   /// see more [JsonConfig] to customize the view
   const JsonView({
-    Key? key,
+    super.key,
     required this.json,
     this.shrinkWrap = false,
     this.padding,
@@ -69,7 +78,8 @@ class JsonView extends StatefulWidget {
     this.animationDuration,
     this.animationCurve,
     this.gap,
-  }) : super(key: key);
+    this.customTiles = const {},
+  });
 
   @override
   State<JsonView> createState() => _JsonViewState();
@@ -88,7 +98,7 @@ class _JsonViewState extends State<JsonView> {
     return Builder(builder: (context) {
       config ??= JsonConfig.of(context);
       if (widget.json is! Map && widget.json is! List) {
-        return const Text('unsupport type');
+        return const Text('Unsupported type');
       }
       late IndexedWidgetBuilder builder;
       late int count;
@@ -98,7 +108,13 @@ class _JsonViewState extends State<JsonView> {
           final item = items[index];
           final key = item.key;
           return getParsedItem(
-              key: key, value: item.value, depth: 0, config: config!);
+            context,
+            key: key,
+            value: item.value,
+            depth: 0,
+            config: config!,
+            customTiles: widget.customTiles,
+          );
         };
         count = items.length;
       } else if (widget.json is List) {
@@ -106,7 +122,13 @@ class _JsonViewState extends State<JsonView> {
         builder = (context, index) {
           final item = items[index];
           return getIndexedItem(
-              index: index, value: item, depth: 0, config: config!);
+            context,
+            index: index,
+            value: item,
+            depth: 0,
+            config: config!,
+            customTiles: widget.customTiles,
+          );
         };
         count = items.length;
       }
@@ -126,7 +148,7 @@ class _JsonViewState extends State<JsonView> {
 class JsonViewBody extends StatefulWidget {
   /// use with caution, it will cause performance issue when json root items is too large
   const JsonViewBody({
-    Key? key,
+    super.key,
     required this.json,
     this.colorScheme,
     this.styleScheme,
@@ -135,7 +157,8 @@ class JsonViewBody extends StatefulWidget {
     this.animationDuration,
     this.animationCurve,
     this.gap,
-  }) : super(key: key);
+    this.customTiles = const {},
+  });
 
   /// {@macro json_view.json_view.json}
   final dynamic json;
@@ -161,6 +184,8 @@ class JsonViewBody extends StatefulWidget {
   /// {@macro json_view.json_config_data.JsonConfigData.gap}
   final int? gap;
 
+  final Map<Object, JsonTileBuilder> customTiles;
+
   @override
   State<JsonViewBody> createState() => _JsonViewBodyState();
 }
@@ -176,20 +201,32 @@ class _JsonViewBodyState extends State<JsonViewBody> {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.json != widget.json) {
-      populateItems();
+      populateItems(context);
     }
   }
 
-  void populateItems() {
+  void populateItems(BuildContext context) {
     if (widget.json is Map) {
       items = [
         for (final entry in (widget.json as Map).entries)
-          getParsedItem(key: entry.key, value: entry.value, config: config!)
+          getParsedItem(
+            context,
+            key: entry.key,
+            value: entry.value,
+            config: config!,
+            customTiles: widget.customTiles,
+          )
       ];
     } else if (widget.json is List) {
       items = [
         for (final item in (widget.json as List))
-          getIndexedItem(index: 0, value: item, config: config!)
+          getIndexedItem(
+            context,
+            index: 0,
+            value: item,
+            config: config!,
+            customTiles: widget.customTiles,
+          )
       ];
     }
   }
@@ -204,7 +241,7 @@ class _JsonViewBodyState extends State<JsonViewBody> {
       if (!init) {
         init = true;
         config ??= JsonConfig.of(context);
-        populateItems();
+        populateItems(context);
       }
 
       return Column(
@@ -218,11 +255,13 @@ class _JsonViewBodyState extends State<JsonViewBody> {
 }
 
 /// get a tile Widget from value & key
-Widget getParsedItem({
+Widget getParsedItem(
+  BuildContext context, {
   required String key,
   required dynamic value,
   required JsonConfigData config,
   int depth = 0,
+  required Map<Object, JsonTileBuilder>? customTiles,
 }) {
   if (value == null) return NullTile(keyName: key, config: config);
   if (value is num) return NumTile(keyName: key, value: value, config: config);
@@ -233,7 +272,7 @@ Widget getParsedItem({
     return StringTile(keyName: key, value: value, config: config);
   }
   if (value is List) {
-    return ListTile(
+    return ListJsonTile(
       keyName: key,
       items: value,
       range: IndexRange(start: 0, end: value.length - 1),
@@ -241,6 +280,7 @@ Widget getParsedItem({
       config: config,
       isExpanded:
           config.style?.openFirstLayer == true && depth == 0 ? true : null,
+      customTiles: customTiles,
     );
   }
   if (value is Map) {
@@ -251,18 +291,38 @@ Widget getParsedItem({
       config: config,
       isExpanded:
           config.style?.openFirstLayer == true && depth == 0 ? true : null,
+      customTiles: customTiles,
     );
   }
-  return const Text('unsupport type');
+
+  if (customTiles?.containsKey(value.runtimeType) == true) {
+    return customTiles![value.runtimeType]!(
+      context,
+      key,
+      value,
+      config,
+      depth,
+    );
+  }
+
+  return const Text('Unsupported type');
 }
 
 /// get a tile Widget from value & index
-Widget getIndexedItem({
+Widget getIndexedItem(
+  BuildContext context, {
   required int index,
   required dynamic value,
   int depth = 0,
   required JsonConfigData config,
+  Map<Object, JsonTileBuilder>? customTiles,
 }) {
   return getParsedItem(
-      key: '[$index]', value: value, depth: depth, config: config);
+    context,
+    key: '[$index]',
+    value: value,
+    depth: depth,
+    config: config,
+    customTiles: customTiles,
+  );
 }
